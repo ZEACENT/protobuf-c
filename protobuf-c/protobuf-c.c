@@ -1163,7 +1163,7 @@ required_field_clone(const ProtobufCFieldDescriptor *field,
     ProtobufCBinaryData *bd_dst = NULL;
     const ProtobufCBinaryData *bd_src = NULL;
     ProtobufCMessage **msg_dst = NULL;
-    const ProtobufCMessage *const *msg_src = NULL;
+    const ProtobufCMessage *msg_src = NULL;
 
     switch (field->type) {
     case PROTOBUF_C_TYPE_SINT32:
@@ -1197,12 +1197,14 @@ required_field_clone(const ProtobufCFieldDescriptor *field,
     case PROTOBUF_C_TYPE_STRING:
         pstr = member_dst;
         str_src = *(char **)member_src;
-        str_len = strlen(str_src);
-        *pstr = do_alloc(allocator, str_len + 1);
-        if (*pstr == NULL)
-            return FALSE;
-        memcpy(*pstr, str_src, str_len);
-        (*pstr)[str_len] = 0;
+        if (str_src) {
+            str_len = strlen(str_src);
+            *pstr = do_alloc(allocator, str_len + 1);
+            if (*pstr == NULL)
+                return FALSE;
+            memcpy(*pstr, str_src, str_len);
+            (*pstr)[str_len] = 0;
+        }
         return TRUE;
     case PROTOBUF_C_TYPE_BYTES:
         bd_dst = member_dst;
@@ -1220,9 +1222,9 @@ required_field_clone(const ProtobufCFieldDescriptor *field,
         return TRUE;
     case PROTOBUF_C_TYPE_MESSAGE:
         msg_dst = member_dst;
-        msg_src = member_src;
-        if (*msg_src) {
-            *msg_dst = protobuf_c_message_clone(*msg_src, allocator);
+        msg_src = *(const ProtobufCMessage **)member_src;
+        if (msg_src) {
+            *msg_dst = protobuf_c_message_clone(msg_src, allocator);
         }
         else {
             *msg_dst = NULL;
@@ -3670,7 +3672,7 @@ protobuf_c_message_clone(const ProtobufCMessage *msg_src, ProtobufCAllocator *al
                         desc->name);
             goto error_cleanup;
         }
-	}
+    }
 
     return rv;
 

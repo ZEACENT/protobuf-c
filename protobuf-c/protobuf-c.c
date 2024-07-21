@@ -1205,6 +1205,9 @@ required_field_clone(const ProtobufCFieldDescriptor *field,
             memcpy(*pstr, str_src, str_len);
             (*pstr)[str_len] = 0;
         }
+        else {
+            *pstr = NULL;
+        }
         return TRUE;
     case PROTOBUF_C_TYPE_BYTES:
         bd_dst = member_dst;
